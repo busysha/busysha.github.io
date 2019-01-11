@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="hashmap,ConcurrentHashMap," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Map 这样的 Key Value 在软件开发中是非常经典的结构，常用于在内存中存放数据。本篇主要想讨论 ConcurrentHashMap 这样一个并发容器;">
+<meta name="keywords" content="hashmap,ConcurrentHashMap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ConcurrentHashMap实现原理及源码分析">
+<meta property="og:url" content="http://shankcity.work/2018/10/12/concurrenthashmap/index.html">
+<meta property="og:site_name" content="记录">
+<meta property="og:description" content="Map 这样的 Key Value 在软件开发中是非常经典的结构，常用于在内存中存放数据。本篇主要想讨论 ConcurrentHashMap 这样一个并发容器;">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://media.developersha.club/java-concurrenthashmap.jpg">
+<meta property="og:updated_time" content="2018-11-22T08:08:35.538Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ConcurrentHashMap实现原理及源码分析">
+<meta name="twitter:description" content="Map 这样的 Key Value 在软件开发中是非常经典的结构，常用于在内存中存放数据。本篇主要想讨论 ConcurrentHashMap 这样一个并发容器;">
+<meta name="twitter:image" content="http://media.developersha.club/java-concurrenthashmap.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '沙'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shankcity.work/2018/10/12/concurrenthashmap/"/>
+
+
+
+
+
+  <title>ConcurrentHashMap实现原理及源码分析 | 记录</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?1f1541302c879892009897555fb73c89";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">记录</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shankcity.work/2018/10/12/concurrenthashmap/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="沙">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://media.developersha.club/thumb.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="记录">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ConcurrentHashMap实现原理及源码分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-12T15:40:06+08:00">
+                2018-10-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index">
+                    <span itemprop="name">java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/10/12/concurrenthashmap/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/10/12/concurrenthashmap/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  Map 这样的 Key Value 在软件开发中是非常经典的结构，常用于在内存中存放数据。本篇主要想讨论 ConcurrentHashMap 这样一个并发容器;
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+        <div class="post-gallery" itemscope itemtype="http://schema.org/ImageGallery">
+          
+          
+            <div class="post-gallery-row">
+              <a class="post-gallery-img fancybox"
+                 href="http://media.developersha.club/java-concurrenthashmap.jpg" rel="gallery_cjn5tsrs1000nzwf6zs1p2iu1"
+                 itemscope itemtype="http://schema.org/ImageObject" itemprop="url">
+                <img src="http://media.developersha.club/java-concurrenthashmap.jpg" itemprop="contentUrl"/>
+              </a>
+            
+          
+
+          
+          </div>
+        </div>
+      
+
+      
+        <p>Map 这样的 <code>Key Value</code> 在软件开发中是非常经典的结构，常用于在内存中存放数据。<br>本篇主要想讨论 ConcurrentHashMap 这样一个并发容器</p>
+<h2 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h2><p>众所周知 HashMap 底层是基于 <code>数组 + 链表</code> 组成的，不过在 jdk1.7 和 1.8 中具体实现稍有不同。</p>
+<blockquote>
+<p>简单总结下 HashMap：无论是 1.7 还是 1.8 其实都能看出 JDK 没有对它做任何的同步操作，所以并发会出问题，甚至 1.7 中出现死循环导致系统不可用（1.8 已经修复死循环问题）。</p>
+</blockquote>
+<p>想要避免Hashmap的线程安全问题有很多办法，比如改用Hashtable或者Collections.synchronizedMap。<br>但是，这两者有着共同的问题：性能。<br>无论读操作还是写操作，它们都会给整个集合加锁，导致同一时间的其他操作为止阻塞</p>
+<p><img src="http://media.developersha.club/%E5%9B%BE%E7%89%871.png" alt=""></p>
+<h2 id="ConcurrentHashMap"><a href="#ConcurrentHashMap" class="headerlink" title="ConcurrentHashMap"></a>ConcurrentHashMap</h2><p>ConcurrentHashMap 同样也分为 1.7 、1.8 版，两者在实现上略有不同。</p>
+<h3 id="Base-1-7"><a href="#Base-1-7" class="headerlink" title="Base 1.7"></a>Base 1.7</h3><p>先来看看 1.7 的实现，下面是他的结构图：</p>
+<p><a href="http://media.developersha.club/006tNc79gy1ftj0evlsrgj30dw073gm2.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1ftj0evlsrgj30dw073gm2.jpg" alt=""></a></p>
+<p>如图所示，是由 Segment 数组、HashEntry 组成，和 HashMap 一样，仍然是数组加链表。</p>
+<p>它的核心成员变量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Segment 数组，存放数据时首先需要定位到具体的 Segment 中。</span><br><span class="line"> */</span><br><span class="line">final Segment&lt;K,V&gt;[] segments;</span><br><span class="line">transient Set&lt;K&gt; keySet;</span><br><span class="line">transient Set&lt;Map.Entry&lt;K,V&gt;&gt; entrySet;</span><br></pre></td></tr></table></figure>
+<p>Segment 是 ConcurrentHashMap 的一个内部类，主要的组成如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">static final class Segment&lt;K,V&gt; extends ReentrantLock implements Serializable &#123;</span><br><span class="line">       private static final long serialVersionUID = 2249069246763182397L;</span><br><span class="line">       </span><br><span class="line">       // 和 HashMap 中的 HashEntry 作用一样，真正存放数据的桶</span><br><span class="line">       transient volatile HashEntry&lt;K,V&gt;[] table;</span><br><span class="line">       transient int count;</span><br><span class="line">       transient int modCount;</span><br><span class="line">       transient int threshold;</span><br><span class="line">       final float loadFactor;</span><br><span class="line">       </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看看其中 HashEntry 的组成：</p>
+<p><a href="http://media.developersha.club/006tNc79gy1ftj0mugrgnj30mo06l0tq.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1ftj0mugrgnj30mo06l0tq.jpg" alt=""></a></p>
+<p>和 HashMap 非常类似，唯一的区别就是其中的核心数据如 value ，以及链表都是 volatile 修饰的，保证了获取时的可见性。</p>
+<p>原理上来说：ConcurrentHashMap 采用了分段锁技术，其中 Segment 继承于 ReentrantLock。不会像 HashTable 那样不管是 put 还是 get 操作都需要做同步处理，理论上 ConcurrentHashMap 支持 CurrencyLevel (Segment 数组数量)的线程并发。每当一个线程占用锁访问一个 Segment 时，不会影响到其他的 Segment。</p>
+<p>下面也来看看核心的 <code>put get</code> 方法。</p>
+<h4 id="put-方法"><a href="#put-方法" class="headerlink" title="put 方法"></a>put 方法</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">    Segment&lt;K,V&gt; s;</span><br><span class="line">    if (value == null)</span><br><span class="line">        throw new NullPointerException();</span><br><span class="line">    int hash = hash(key);</span><br><span class="line">    int j = (hash &gt;&gt;&gt; segmentShift) &amp; segmentMask;</span><br><span class="line">    if ((s = (Segment&lt;K,V&gt;)UNSAFE.getObject          // nonvolatile; recheck</span><br><span class="line">         (segments, (j &lt;&lt; SSHIFT) + SBASE)) == null) //  in ensureSegment</span><br><span class="line">        s = ensureSegment(j);</span><br><span class="line">    return s.put(key, hash, value, false);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先是通过 key 定位到 Segment，之后在对应的 Segment 中进行具体的 put。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">final V put(K key, int hash, V value, boolean onlyIfAbsent) &#123;</span><br><span class="line">    HashEntry&lt;K,V&gt; node = tryLock() ? null :</span><br><span class="line">        scanAndLockForPut(key, hash, value);</span><br><span class="line">    V oldValue;</span><br><span class="line">    try &#123;</span><br><span class="line">        HashEntry&lt;K,V&gt;[] tab = table;</span><br><span class="line">        int index = (tab.length - 1) &amp; hash;</span><br><span class="line">        HashEntry&lt;K,V&gt; first = entryAt(tab, index);</span><br><span class="line">        for (HashEntry&lt;K,V&gt; e = first;;) &#123;</span><br><span class="line">            if (e != null) &#123;</span><br><span class="line">                K k;</span><br><span class="line">                if ((k = e.key) == key ||</span><br><span class="line">                    (e.hash == hash &amp;&amp; key.equals(k))) &#123;</span><br><span class="line">                    oldValue = e.value;</span><br><span class="line">                    if (!onlyIfAbsent) &#123;</span><br><span class="line">                        e.value = value;</span><br><span class="line">                        ++modCount;</span><br><span class="line">                    &#125;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">                e = e.next;</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                if (node != null)</span><br><span class="line">                    node.setNext(first);</span><br><span class="line">                else</span><br><span class="line">                    node = new HashEntry&lt;K,V&gt;(hash, key, value, first);</span><br><span class="line">                int c = count + 1;</span><br><span class="line">                if (c &gt; threshold &amp;&amp; tab.length &lt; MAXIMUM_CAPACITY)</span><br><span class="line">                    rehash(node);</span><br><span class="line">                else</span><br><span class="line">                    setEntryAt(tab, index, node);</span><br><span class="line">                ++modCount;</span><br><span class="line">                count = c;</span><br><span class="line">                oldValue = null;</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        unlock();</span><br><span class="line">    &#125;</span><br><span class="line">    return oldValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然 HashEntry 中的 value 是用 volatile 关键词修饰的，但是并不能保证并发的原子性，所以 put 操作时仍然需要加锁处理。</p>
+<p>首先第一步的时候会尝试获取锁，如果获取失败肯定就有其他线程存在竞争，则利用 <code>scanAndLockForPut()</code> 自旋获取锁。<br> <a href="http://media.developersha.club/006tNc79gy1ftj2a3a5b7j30qj0f9dis.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1ftj2a3a5b7j30qj0f9dis.jpg" alt=""></a></p>
+<ol>
+<li>尝试自旋获取锁。</li>
+<li>如果重试的次数达到了 <code>MAX_SCAN_RETRIES</code> 则改为阻塞锁获取，保证能获取成功。</li>
+</ol>
+<p><a href="http://media.developersha.club/006tKfTcgy1ftj2lxexeqj30rw0lfwie.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tKfTcgy1ftj2lxexeqj30rw0lfwie.jpg" alt=""></a></p>
+<p>再结合图看看 put 的流程。</p>
+<ol>
+<li>将当前 Segment 中的 table 通过 key 的 hashcode 定位到 HashEntry。</li>
+<li>遍历该 HashEntry，如果不为空则判断传入的 key 和当前遍历的 key 是否相等，相等则覆盖旧的 value。</li>
+<li>不为空则需要新建一个 HashEntry 并加入到 Segment 中，同时会先判断是否需要扩容。</li>
+<li>最后会解除在 1 中所获取当前 Segment 的锁。</li>
+</ol>
+<h4 id="get-方法"><a href="#get-方法" class="headerlink" title="get 方法"></a>get 方法</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">public V get(Object key) &#123;</span><br><span class="line">    Segment&lt;K,V&gt; s; // manually integrate access methods to reduce overhead</span><br><span class="line">    HashEntry&lt;K,V&gt;[] tab;</span><br><span class="line">    int h = hash(key);</span><br><span class="line">    long u = (((h &gt;&gt;&gt; segmentShift) &amp; segmentMask) &lt;&lt; SSHIFT) + SBASE;</span><br><span class="line">    if ((s = (Segment&lt;K,V&gt;)UNSAFE.getObjectVolatile(segments, u)) != null &amp;&amp;</span><br><span class="line">        (tab = s.table) != null) &#123;</span><br><span class="line">        for (HashEntry&lt;K,V&gt; e = (HashEntry&lt;K,V&gt;) UNSAFE.getObjectVolatile</span><br><span class="line">                 (tab, ((long)(((tab.length - 1) &amp; h)) &lt;&lt; TSHIFT) + TBASE);</span><br><span class="line">             e != null; e = e.next) &#123;</span><br><span class="line">            K k;</span><br><span class="line">            if ((k = e.key) == key || (e.hash == h &amp;&amp; key.equals(k)))</span><br><span class="line">                return e.value;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return null;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>只需要将 Key 通过 Hash 之后定位到具体的 Segment ，再通过一次 Hash 定位到具体的元素上。</p>
+<p>由于 HashEntry 中的 value 属性是用 volatile 关键词修饰的，保证了内存可见性，所以每次获取时都是最新值。</p>
+<p>ConcurrentHashMap 的 get 方法是非常高效的，<strong>因为整个过程都不需要加锁</strong>。</p>
+<h3 id="Base-1-8"><a href="#Base-1-8" class="headerlink" title="Base 1.8"></a>Base 1.8</h3><p>1.7 已经解决了并发问题，并且能支持 N 个 Segment 这么多次数的并发，但依然存在 HashMap 在 1.7 版本中的问题。</p>
+<blockquote>
+<p>那就是查询遍历链表效率太低。</p>
+</blockquote>
+<p>因此 1.8 做了一些数据结构上的调整。</p>
+<p>首先来看下底层的组成结构：<br> <a href="http://media.developersha.club/006tNc79gy1fthpv4odbsj30lp0drmxr.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1fthpv4odbsj30lp0drmxr.jpg" alt=""></a></p>
+<p>看起来是不是和 1.8 HashMap 结构类似？</p>
+<p>其中抛弃了原有的 Segment 分段锁，而采用了 <code>CAS + synchronized</code> 来保证并发安全性。</p>
+<p><a href="http://media.developersha.club/006tNc79gy1fthq78e5gqj30nr09mmz9.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1fthq78e5gqj30nr09mmz9.jpg" alt=""></a></p>
+<p>也将 1.7 中存放数据的 HashEntry 改为 Node，但作用都是相同的。</p>
+<p>其中的 <code>val next</code> 都用了 volatile 修饰，保证了可见性。</p>
+<h4 id="put-方法-1"><a href="#put-方法-1" class="headerlink" title="put 方法"></a>put 方法</h4><p>重点来看看 put 函数：</p>
+<p><a href="http://media.developersha.club/006tNc79gy1fthrz8jlo8j30oc0rbte3.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1fthrz8jlo8j30oc0rbte3.jpg" alt=""></a></p>
+<ul>
+<li>根据 key 计算出 hashcode 。</li>
+<li>判断是否需要进行初始化。</li>
+<li><code>f</code> 即为当前 key 定位出的 Node，如果为空表示当前位置可以写入数据，利用 CAS 尝试写入，失败则自旋保证成功。</li>
+<li>如果当前位置的 <code>hashcode == MOVED == -1</code>,则需要进行扩容。</li>
+<li>如果都不满足，则利用 synchronized 锁写入数据。</li>
+<li>如果数量大于 <code>TREEIFY_THRESHOLD</code> 则要转换为红黑树。</li>
+</ul>
+<h4 id="get-方法-1"><a href="#get-方法-1" class="headerlink" title="get 方法"></a>get 方法</h4><p><a href="http://media.developersha.club/006tNc79gy1fthsnp2f35j30o409hwg7.jpg" target="_blank" rel="noopener"><img src="http://media.developersha.club/006tNc79gy1fthsnp2f35j30o409hwg7.jpg" alt=""></a></p>
+<ul>
+<li>根据计算出来的 hashcode 寻址，如果就在桶上那么直接返回值。</li>
+<li>如果是红黑树那就按照树的方式获取值。</li>
+<li>就不满足那就按照链表的方式遍历获取值。</li>
+</ul>
+<blockquote>
+<p>1.8 在 1.7 的数据结构上做了大的改动，采用红黑树之后可以保证查询效率（<code>O(logn)</code>），甚至取消了 ReentrantLock 改为了 synchronized，这样可以看出在新版的 JDK 中对 synchronized 优化是很到位的。</p>
+</blockquote>
+<h2 id="引申"><a href="#引申" class="headerlink" title="引申"></a>引申</h2><h3 id="HashMap负载因子为什么是0-75"><a href="#HashMap负载因子为什么是0-75" class="headerlink" title="HashMap负载因子为什么是0.75"></a>HashMap负载因子为什么是0.75</h3><p>为什么加载因子要默认是0.75？<br>从hashmap源码注释里找到了这一段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">* parameter of about 0.5 on average for the default resizing</span><br><span class="line">* threshold of 0.75, although with a large variance because of</span><br><span class="line">* resizing granularity. Ignoring variance, the expected</span><br><span class="line">* occurrences of list size k are (exp(-0.5) * pow(0.5, k) /</span><br><span class="line">* factorial(k)). The first values are:</span><br><span class="line">*</span><br><span class="line">* 0:    0.60653066</span><br><span class="line">* 1:    0.30326533</span><br><span class="line">* 2:    0.07581633</span><br><span class="line">* 3:    0.01263606</span><br><span class="line">* 4:    0.00157952</span><br><span class="line">* 5:    0.00015795</span><br><span class="line">* 6:    0.00001316</span><br><span class="line">* 7:    0.00000094</span><br><span class="line">* 8:    0.00000006</span><br><span class="line">* more: less than 1 in ten million</span><br></pre></td></tr></table></figure>
+<p>简单翻译一下就是在理想情况下,使用随机哈希码,节点出现的频率在hash桶中遵循泊松分布，同时给出了桶中元素个数和概率的对照表。</p>
+<p>从上面的表中可以看到当桶中元素到达8个的时候，概率已经变得非常小，也就是说用0.75作为加载因子，每个碰撞位置的链表长度超过８个是几乎不可能的。</p>
+<p>好了，再深挖就要挖到统计学那边去了，就此打住，重申一下使用hash容器请尽量指定初始容量，且是2的幂次方。</p>
+<h3 id="HashMap为什么长度建议是2的幂次方"><a href="#HashMap为什么长度建议是2的幂次方" class="headerlink" title="HashMap为什么长度建议是2的幂次方"></a>HashMap为什么长度建议是2的幂次方</h3><p>HashMap里面的数组size必须是2的次幂原因：</p>
+<ul>
+<li>1.让元素分布均匀</li>
+</ul>
+<blockquote>
+<p>我们希望元素存放的更均匀，最理想的效果是Entry数组中每个位置都只有一个元素，这样，查询的时候效率最高，不需要遍历单链表，也不需要通过equals去比较Key，而且空间利用率最大。那么如何计算才会分布最均匀呢？我们首先想到的就是%运算，哈希值%容量=bucketIndex，我们来看源码</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">static int indexFor(int h,int length)&#123;</span><br><span class="line">    return h &amp; (length - 1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>h是通过k的hashCode最终计算出来的哈希值，并不是hashCode本身，而是hashCode之上又经过一层运算的hash值，length是目前容量。当容量是2^n时，h &amp; (length -1) == h % length。</p>
+</blockquote>
+<ul>
+<li>2.节约空间</li>
+</ul>
+<blockquote>
+<p>如果length不是2的次幂，比如length为15，则length-1为14，对应的二进制为1110，在于h与操作，最后一位都为0，而0001，0011，0101，1001，1011，0111，1101这几个位置永远都不能存放元素了，空间浪费相当大，更糟的是这种情况中，数组可以使用的位置比数组长度小了很多，这意味着进一步增加了碰撞的几率，减慢了查询的效率！这样就会造成空间的浪费</p>
+</blockquote>
+<h3 id="ConcurrentHashMap的扩容过程"><a href="#ConcurrentHashMap的扩容过程" class="headerlink" title="ConcurrentHashMap的扩容过程"></a>ConcurrentHashMap的扩容过程</h3><p><img src="http://media.developersha.club/%E5%9B%BE%E7%89%872.png" alt=""><br><img src="http://media.developersha.club/concurrent1.png" alt=""><br>回顾一下 transfer 的相关代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">int runBit = fh &amp; n;</span><br><span class="line">Node&lt;K,V&gt; lastRun = f; </span><br><span class="line">for (Node&lt;K,V&gt; p = f.next; p != null; p = p.next) &#123;</span><br><span class="line">    // 取于桶中每个节点的 hash 值</span><br><span class="line">    int b = p.hash &amp; n;</span><br><span class="line">    if (b != runBit) &#123;</span><br><span class="line">        runBit = b; </span><br><span class="line">        lastRun = p; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">if (runBit == 0) &#123;// 如果最后更新的 runBit 是 0 ，设置低位节点</span><br><span class="line">    ln = lastRun;</span><br><span class="line">    hn = null;</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">    hn = lastRun; // 如果最后更新的 runBit 是 1， 设置高位节点</span><br><span class="line">    ln = null;</span><br><span class="line">&#125;</span><br><span class="line">for (Node&lt;K,V&gt; p = f; p != lastRun; p = p.next) &#123;</span><br><span class="line">    int ph = p.hash; K pk = p.key; V pv = p.val;</span><br><span class="line">    // 如果与运算结果是 0，那么就还在低位</span><br><span class="line">    if ((ph &amp; n) == 0) // 如果是0 ，那么创建低位节点</span><br><span class="line">        ln = new Node&lt;K,V&gt;(ph, pk, pv, ln);</span><br><span class="line">    else // 1 则创建高位</span><br><span class="line">        hn = new Node&lt;K,V&gt;(ph, pk, pv, hn);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>关键看上面注释的代码，如果 runBit 是 0，那么就设置在低位节点，反之，如果是 1，设置在高位。<br>为什么这么设计呢？这要从 ConcurrentHashMap 的取于下标算法开始说起。<br>我们知道，在 putVal 方法中，会通过取于对象的 hash 值获取下标。具体代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">else if ((f = tabAt(tab, i = (n - 1) &amp; hash)) == null) &#123;</span><br></pre></td></tr></table></figure>
+<p>也就是 <code>(n - 1) &amp; hash)</code>，这个 n 就是 length。这个其实相当于 hash % n（<code>n 必须是2的指数</code>）。但是比 % 更高效。</p>
+<p>复习一下与运算：<code>第一个操作数的的第n位于第二个操作数的第n位如果都是1，那么结果的第n为也为1，否则为0</code>.</p>
+<p>然后开始推导：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">(n - 1) &amp; hash),取于算法。</span><br><span class="line">假设，我们的 table 长度是 16，也就是 10000，减一就是 01111. 取于下面这个数。这个数特别之处在于,</span><br><span class="line">他的右起第 5 位是 0。如果是 10000 &amp; 这个数，结果是 0.</span><br><span class="line">000000001111                     000000010000 </span><br><span class="line">010101001001 // 结果 9            010101001001 // &amp;运算结果： 0</span><br><span class="line"></span><br><span class="line">当我们扩容后，16 变成 32，也就是 10000. 再看看 (n - 1) &amp; hash) 的结果：</span><br><span class="line"></span><br><span class="line">000000011111                    </span><br><span class="line">010101001001 // 结果还是 9</span><br><span class="line"></span><br><span class="line">从这里可以看出，如果 &amp; 运算是 0 ，那么即使扩容，下标也是不变的。</span><br><span class="line"></span><br><span class="line">再看看另一种情况，换一个 hash 数字，右起第五位是 1 ：           </span><br><span class="line">000000001111                      000000010000</span><br><span class="line">010101010001 // 结果 1             010101010001 // &amp;运算结果： 1</span><br><span class="line"></span><br><span class="line">这里的 &amp; 与运算后，结果是 1，和上面的不同。同时， (n - 1) &amp; hash) 的结果也是 1.</span><br><span class="line"></span><br><span class="line">当扩容后，结果是什么样子呢？</span><br><span class="line">000000011111</span><br><span class="line">010101010001 // 结果变化：10001 == 17</span><br><span class="line"></span><br><span class="line">可以看到，(n - 1) &amp; hash) 的结果是 17，17 - 1，刚好是 16，而这个 16 的原因是我们的二进制进了一位。</span><br></pre></td></tr></table></figure></p>
+<p>现在明白了吧？0 在低位，1 在高位不是随便设计的。这里让我想到了一致性 hash 算法：<code>当桶的数量变化了，那么 hash 的位置也会变化</code>。<br><strong>这里的设计是为了防止下次取值的时候，hash 不到正确的位置。</strong><br>实际上，JDK 1.8 的 HashMap 也是这么实现的重新散列。</p>
+<h3 id="ConcurrentHashMap-JDK1-8-为什么要放弃Segment"><a href="#ConcurrentHashMap-JDK1-8-为什么要放弃Segment" class="headerlink" title="ConcurrentHashMap(JDK1.8)为什么要放弃Segment"></a>ConcurrentHashMap(JDK1.8)为什么要放弃Segment</h3><p>为什么是synchronized，而不是可重入锁   </p>
+<ul>
+<li>1.减少内存开销   </li>
+</ul>
+<blockquote>
+<p>假设使用可重入锁来获得同步支持，那么每个节点都需要通过继承AQS来获得同步支持。但并不是每个节点都需要获得同步支持的，只有链表的头节点（红黑树的根节点）需要同步，这无疑带来了巨大内存浪费。</p>
+</blockquote>
+<ul>
+<li>2.获得JVM的支持   </li>
+</ul>
+<blockquote>
+<p>可重入锁毕竟是API这个级别的，后续的性能优化空间很小。   synchronized则是JVM直接支持的，JVM能够在运行时作出相应的优化措施：锁粗化、锁消除、锁自旋等等。这就使得synchronized能够随着JDK版本的升级而不改动代码的前提下获得性能上的提升。</p>
+</blockquote>
+
+      <script>
+        window.disqusProxy={
+          shortname: 'sha0830',
+          username: 'sha0830',
+          server: 'shankcity.work',
+          port: 5509,
+          adminAvatar: '/avatars/admin-avatar.jpg',
+          identifier: '2018/10/12/concurrenthashmap/',
+        };
+        window.disqus_config = function () {
+          this.page.url = window.location.href;
+          this.page.identifier = window.disqusProxy.identifier;
+        };
+      </script>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="http://o8pepn9if.bkt.clouddn.com/qrcode_for_wechat.jpg" alt="沙 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>欢迎您扫一扫上面的微信公众号，订阅我的博客！！</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="http://o8pepn9if.bkt.clouddn.com/wechat-reward.jpg" alt="沙 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/hashmap/" rel="tag"># hashmap</a>
+          
+            <a href="/tags/ConcurrentHashMap/" rel="tag"># ConcurrentHashMap</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/25/git/" rel="next" title="搭建Git服务器">
+                <i class="fa fa-chevron-left"></i> 搭建Git服务器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+      <script src="//cdn.bootcss.com/react/16.0.0/umd/react.production.min.js"></script>
+      <script src="//cdn.bootcss.com/react-dom/16.0.0/umd/react-dom.production.min.js"></script>
+      <script src="//cdn.bootcss.com/fetch/2.0.3/fetch.min.js"></script>
+      <script src="//cdn.jsdelivr.net/npm/blockies-identicon@0.1.0/blockies.min.js"></script>
+      <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+      <div id="disqus_proxy_thread"><script src="/scripts/hexo-disqus-proxy-primary.js" async></script>
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="http://media.developersha.club/thumb.jpeg"
+                alt="沙" />
+            
+              <p class="site-author-name" itemprop="name">沙</p>
+              <p class="site-description motion-element" itemprop="description">记录点滴！</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/sha0830" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shaat1990@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.baidu.com/" title="百度" target="_blank">百度</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.google.com/" title="google" target="_blank">google</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HashMap"><span class="nav-number">1.</span> <span class="nav-text">HashMap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ConcurrentHashMap"><span class="nav-number">2.</span> <span class="nav-text">ConcurrentHashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Base-1-7"><span class="nav-number">2.1.</span> <span class="nav-text">Base 1.7</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#put-方法"><span class="nav-number">2.1.1.</span> <span class="nav-text">put 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#get-方法"><span class="nav-number">2.1.2.</span> <span class="nav-text">get 方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Base-1-8"><span class="nav-number">2.2.</span> <span class="nav-text">Base 1.8</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#put-方法-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">put 方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#get-方法-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">get 方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引申"><span class="nav-number">3.</span> <span class="nav-text">引申</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap负载因子为什么是0-75"><span class="nav-number">3.1.</span> <span class="nav-text">HashMap负载因子为什么是0.75</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap为什么长度建议是2的幂次方"><span class="nav-number">3.2.</span> <span class="nav-text">HashMap为什么长度建议是2的幂次方</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ConcurrentHashMap的扩容过程"><span class="nav-number">3.3.</span> <span class="nav-text">ConcurrentHashMap的扩容过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ConcurrentHashMap-JDK1-8-为什么要放弃Segment"><span class="nav-number">3.4.</span> <span class="nav-text">ConcurrentHashMap(JDK1.8)为什么要放弃Segment</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">沙</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://sha0830.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://shankcity.work/2018/10/12/concurrenthashmap/';
+          this.page.identifier = '2018/10/12/concurrenthashmap/';
+          this.page.title = 'ConcurrentHashMap实现原理及源码分析';
+        };
+        var d = document, s = d.createElement('script');
+        
+        s.setAttribute('data-timestamp', '' + +new Date());
+        
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

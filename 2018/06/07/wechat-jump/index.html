@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="2017 年 12 月 28 日下午，微信发布了 6.6.1 版本，加入了「小游戏」功能，并提供了官方 DEMO「跳一跳」。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="教你用 Python 来玩微信跳一跳">
+<meta property="og:url" content="http://shankcity.work/2018/06/07/wechat-jump/index.html">
+<meta property="og:site_name" content="记录">
+<meta property="og:description" content="2017 年 12 月 28 日下午，微信发布了 6.6.1 版本，加入了「小游戏」功能，并提供了官方 DEMO「跳一跳」。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://media.developersha.club/c3a916a7gy1fmxe4gnfhnj20hs0a0t8q.jpg">
+<meta property="og:updated_time" content="2018-11-22T07:42:46.610Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="教你用 Python 来玩微信跳一跳">
+<meta name="twitter:description" content="2017 年 12 月 28 日下午，微信发布了 6.6.1 版本，加入了「小游戏」功能，并提供了官方 DEMO「跳一跳」。">
+<meta name="twitter:image" content="http://media.developersha.club/c3a916a7gy1fmxe4gnfhnj20hs0a0t8q.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '沙'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shankcity.work/2018/06/07/wechat-jump/"/>
+
+
+
+
+
+  <title>教你用 Python 来玩微信跳一跳 | 记录</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?1f1541302c879892009897555fb73c89";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">记录</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shankcity.work/2018/06/07/wechat-jump/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="沙">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://media.developersha.club/thumb.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="记录">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">教你用 Python 来玩微信跳一跳</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-07T14:20:16+08:00">
+                2018-06-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/07/wechat-jump/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/07/wechat-jump/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  2017 年 12 月 28 日下午，微信发布了 6.6.1 版本，加入了「小游戏」功能，并提供了官方 DEMO「跳一跳」。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+        <div class="post-gallery" itemscope itemtype="http://schema.org/ImageGallery">
+          
+          
+            <div class="post-gallery-row">
+              <a class="post-gallery-img fancybox"
+                 href="http://media.developersha.club/c3a916a7gy1fmxe4gnfhnj20hs0a0t8q.jpg" rel="gallery_cjn5tsrrw000hzwf6l0xdmck4"
+                 itemscope itemtype="http://schema.org/ImageObject" itemprop="url">
+                <img src="http://media.developersha.club/c3a916a7gy1fmxe4gnfhnj20hs0a0t8q.jpg" itemprop="contentUrl"/>
+              </a>
+            
+          
+
+          
+          </div>
+        </div>
+      
+
+      
+        <p><a href="https://wangshub.github.io" target="_blank" rel="noopener">https://wangshub.github.io</a></p>
+<p><a href="https://github.com/wangshub/wechat_jump_game" target="_blank" rel="noopener">GitHub 项目地址</a></p>
+<h2 id="游戏模式"><a href="#游戏模式" class="headerlink" title="游戏模式"></a>游戏模式</h2><blockquote>
+<p>2017 年 12 月 28 日下午，微信发布了 6.6.1 版本，加入了「小游戏」功能，并提供了官方 DEMO「跳一跳」。</p>
+</blockquote>
+<p>这是一个 2.5D 插画风格的益智游戏，玩家可以通过按压屏幕时间的长短来控制这个「小人」跳跃的距离。可能刚开始上手的时候，因为时间距离之间的关系把握不恰当，只能跳出几个就掉到了台子下面。</p>
+<p>玩法类似于《Flappy Bird》</p>
+<p><img src="http://media.developersha.club/c3a916a7gy1fmxe4gnfhnj20hs0a0t8q.jpg" alt=""></p>
+<p><strong>如果能精确测量出起始和目标点之间测距离，就可以估计按压的时间来精确跳跃？所以花 2 个小时写了一个 Python 脚本进行验证</strong></p>
+<p>希望不要把分数刷太高，容易没朋友的。。。</p>
+<h2 id="操作规范"><a href="#操作规范" class="headerlink" title="操作规范"></a>操作规范</h2><blockquote>
+<p>考虑到生产环境的规范性，实验与项目之间不受干扰，请尽量用新的虚拟环境来完成实验</p>
+</blockquote>
+<p>MacOS/Win,请使用如下操作开辟新的虚拟环境（不强调表示MacOS/Win相同操作）</p>
+<ul>
+<li><p>下载Anaconda. MacOS:默认安装/Win:注意安装时候勾选配置路径或者之后手动配置，直至cmd后conda关键字有效</p>
+</li>
+<li><p>查看所有的虚拟环境<code>conda info --envs</code></p>
+</li>
+<li><p>使用命令：<code>conda create -n wechat_env python=3</code>，创建名为<code>wechat_env</code>的虚拟环境，且配置python版本为python3</p>
+</li>
+<li><p>激活虚拟环境：MacOS: <code>source activate wechat_env</code>/Win：<code>activate wechat_env</code></p>
+</li>
+<li><p>安装所需要的包，比如<code>matplotlib</code>等，建议使用<code>conda install package_name</code>来避免虚拟环境包的路径问题</p>
+</li>
+</ul>
+<p><strong>接下来的操作非必须，仅当实验完成后可操作，试验阶段全程在虚拟环境中操作，进入虚拟环境会有前置符号表示如：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">(wechat_env) ~/Desktop/wechat_jump_game-master&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>退出虚拟环境：MacOS: <code>source deactivate wechat_env</code> / Win: <code>deactivate wecha_env</code></p>
+</li>
+<li><p>删除虚拟环境： <code>conda remove -n wechat_env --all</code></p>
+</li>
+</ul>
+<h2 id="工具介绍"><a href="#工具介绍" class="headerlink" title="工具介绍"></a>工具介绍</h2><ul>
+<li><p>Python</p>
+</li>
+<li><p>手机或模拟器</p>
+</li>
+<li><p><a href="https://developer.android.com/studio/releases/platform-tools.html" target="_blank" rel="noopener">ADB</a> 驱动，可以到<a href="https://adb.clockworkmod.com/" target="_blank" rel="noopener">这里</a>下载</p>
+</li>
+<li><p>相关依赖</p>
+</li>
+</ul>
+<p>如果你是<code>iOS</code> + MacOS，请参考下面的配置：</p>
+<ul>
+<li><p>使用真机调试 WDA，参考 iOS 真机如何安装<a href="https://testerhome.com/topics/7220" target="_blank" rel="noopener">WebDriverAgent · TesterHome</a></p>
+</li>
+<li><p>安装<a href="https://github.com/openatx/facebook-wda" target="_blank" rel="noopener">openatx/facebook-wda</a></p>
+</li>
+<li><p>Python 3</p>
+</li>
+</ul>
+<p>如果你是 <code>Android</code> + MacOS，请参考下面的配置：</p>
+<ul>
+<li><p>Python 3</p>
+</li>
+<li><p>使用brew进行安装 <code>brew cask install android-platform-tools</code></p>
+</li>
+<li><p>安装完后插入安卓设备且安卓已打开usb调试模式（部分新机型可能需要再另外勾上 允许模拟点击 权限），终端输入 <code>adb devices</code> ,显示如下表明设备已连接</p>
+</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">List of devices attached</span><br><span class="line"></span><br><span class="line">6934dc33	device</span><br></pre></td></tr></table></figure>
+<p>如果你是 <code>Android</code> + Windows，请参考下面的配置：</p>
+<ul>
+<li><p>Python 3</p>
+</li>
+<li><p>安装 <a href="https://adb.clockworkmod.com/" target="_blank" rel="noopener">ADB</a> 后，请在 环境变量 里将 adb 的安装路径保存到 PATH 变量里，确保 <code>adb</code> 命令可以被识别到。</p>
+</li>
+<li><p>同 <code>Android</code> + MacOS 测试连接</p>
+</li>
+</ul>
+<p><strong>关于Win+Android的adb调试添加路径等问题，可以尝试使用Tools文件夹中adb文件夹进行调试，详见adb中readme文件</strong></p>
+<h2 id="依赖安装"><a href="#依赖安装" class="headerlink" title="依赖安装"></a>依赖安装</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br></pre></td></tr></table></figure>
+<h2 id="原理说明"><a href="#原理说明" class="headerlink" title="原理说明"></a>原理说明</h2><ol>
+<li><p>将手机点击到《跳一跳》小程序界面；</p>
+</li>
+<li><p>用 ADB 工具获取当前手机截图，并用 ADB 将截图 pull 上来</p>
+</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">adb shell screencap -p /sdcard/autojump.png</span><br><span class="line"></span><br><span class="line">adb pull /sdcard/autojump.png .</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li><p>计算按压时间</p>
+<ul>
+<li><p>手动版：用 Matplotlib 显示截图，用鼠标点击起始点和目标位置，计算像素距离；</p>
+</li>
+<li><p>自动版：靠棋子的颜色来识别棋子，靠底色和方块的色差来识别棋盘；</p>
+</li>
+</ul>
+</li>
+</ol>
+<ol start="4">
+<li>用 ADB 工具点击屏幕蓄力一跳；</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">adb shell input swipe x y x y time(ms)</span><br></pre></td></tr></table></figure>
+<h2 id="安卓手机操作步骤"><a href="#安卓手机操作步骤" class="headerlink" title="安卓手机操作步骤"></a>安卓手机操作步骤</h2><ul>
+<li><p>安卓手机打开 USB 调试，设置》开发者选项》USB 调试</p>
+</li>
+<li><p>电脑与手机 USB 线连接，确保执行<code>adb devices</code>可以找到设备 ID</p>
+</li>
+<li><p>界面转至微信跳一跳游戏，点击开始游戏</p>
+</li>
+<li><p>运行<code>python wechat_jump_auto.py</code>，如果手机界面显示 USB 授权，请点击确认</p>
+</li>
+<li><p>请按照你的手机分辨率从<code>./config/</code>文件夹找到相应的配置，拷贝到 *.py 同级目录<code>./config.json</code>（如果屏幕分辨率能成功探测，会直接调用 config 目录的配置，不需要复制）</p>
+</li>
+</ul>
+<h2 id="iOS-手机操作步骤"><a href="#iOS-手机操作步骤" class="headerlink" title="iOS 手机操作步骤"></a>iOS 手机操作步骤</h2><ol>
+<li><p>运行安装好的 <code>WebDriverAgentRunner</code></p>
+</li>
+<li><p>将手机点击到《跳一跳》小程序界面</p>
+</li>
+<li><p>运行脚本。有两种模式可供选择：手动辅助跳 和 自动连续跳</p>
+<ul>
+<li><p>手动辅助跳</p>
+<ul>
+<li><p>命令行运行<code>python3 wechat_jump_iOS_py3.py</code></p>
+</li>
+<li><p>依次点击弹出的窗口中的起始位置和目标位置，会自动计算距离后起跳</p>
+</li>
+<li><p>根据起跳的精准情况更改<code>python3 wechat_jump_iOS_py3.py</code>中的<code>time_coefficient</code>参数，直到获得最佳取值</p>
+</li>
+</ul>
+</li>
+<li><p>自动连续跳</p>
+<ul>
+<li><p>拷贝<code>./config/iPhone</code>目录下对应的设备配置文件，重命名并替换到<code>./config.json</code></p>
+</li>
+<li><p>命令行运行<code>python3 wechat_jump_auto_iOS.py</code></p>
+</li>
+<li><p>会自动计算坐标并连续起跳，根据起跳的精准情况更改<code>./config.json</code> 中的<code>press_coefficient</code>参数，直到获得最佳取值</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h2><p><img src="http://media.developersha.club/c3a916a7gy1fmxel5dkxvj20u01hcmzx.jpg" alt=""></p>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><ul>
+<li style="list-style: none"><input type="checkbox" checked> 可以对拉上来的图片进行颜色分割，识别小人和目标中心，这样就不需要手动点击自动弹跳。</li>
+</ul>
+<blockquote>
+<p>事实证明，机器人比人更会玩儿游戏。</p>
+</blockquote>
+
+      <script>
+        window.disqusProxy={
+          shortname: 'sha0830',
+          username: 'sha0830',
+          server: 'shankcity.work',
+          port: 5509,
+          adminAvatar: '/avatars/admin-avatar.jpg',
+          identifier: '2018/06/07/wechat-jump/',
+        };
+        window.disqus_config = function () {
+          this.page.url = window.location.href;
+          this.page.identifier = window.disqusProxy.identifier;
+        };
+      </script>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <div id="wechat_subscriber" style="display: block; padding: 10px 0; margin: 20px auto; width: 100%; text-align: center">
+    <img id="wechat_subscriber_qcode" src="http://o8pepn9if.bkt.clouddn.com/qrcode_for_wechat.jpg" alt="沙 wechat" style="width: 200px; max-width: 100%;"/>
+    <div>欢迎您扫一扫上面的微信公众号，订阅我的博客！！</div>
+</div>
+
+      </div>
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="http://o8pepn9if.bkt.clouddn.com/wechat-reward.jpg" alt="沙 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/07/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/07/hexo-blog/" rel="prev" title="快速搭建Hexo博客+webhook自动部署">
+                快速搭建Hexo博客+webhook自动部署 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+      <script src="//cdn.bootcss.com/react/16.0.0/umd/react.production.min.js"></script>
+      <script src="//cdn.bootcss.com/react-dom/16.0.0/umd/react-dom.production.min.js"></script>
+      <script src="//cdn.bootcss.com/fetch/2.0.3/fetch.min.js"></script>
+      <script src="//cdn.jsdelivr.net/npm/blockies-identicon@0.1.0/blockies.min.js"></script>
+      <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+      <div id="disqus_proxy_thread"><script src="/scripts/hexo-disqus-proxy-primary.js" async></script>
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="http://media.developersha.club/thumb.jpeg"
+                alt="沙" />
+            
+              <p class="site-author-name" itemprop="name">沙</p>
+              <p class="site-description motion-element" itemprop="description">记录点滴！</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">10</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/sha0830" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shaat1990@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.baidu.com/" title="百度" target="_blank">百度</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.google.com/" title="google" target="_blank">google</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#游戏模式"><span class="nav-number">1.</span> <span class="nav-text">游戏模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#操作规范"><span class="nav-number">2.</span> <span class="nav-text">操作规范</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工具介绍"><span class="nav-number">3.</span> <span class="nav-text">工具介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖安装"><span class="nav-number">4.</span> <span class="nav-text">依赖安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#原理说明"><span class="nav-number">5.</span> <span class="nav-text">原理说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安卓手机操作步骤"><span class="nav-number">6.</span> <span class="nav-text">安卓手机操作步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#iOS-手机操作步骤"><span class="nav-number">7.</span> <span class="nav-text">iOS 手机操作步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实验结果"><span class="nav-number">8.</span> <span class="nav-text">实验结果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TODO"><span class="nav-number">9.</span> <span class="nav-text">TODO</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">沙</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://sha0830.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://shankcity.work/2018/06/07/wechat-jump/';
+          this.page.identifier = '2018/06/07/wechat-jump/';
+          this.page.title = '教你用 Python 来玩微信跳一跳';
+        };
+        var d = document, s = d.createElement('script');
+        
+        s.setAttribute('data-timestamp', '' + +new Date());
+        
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
