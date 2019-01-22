@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="cache," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文是上周去技术沙龙听了一下爱奇艺的Java缓存之路有感写出来的。先简单介绍一下爱奇艺的java缓存道路的发展吧。">
+<meta name="keywords" content="cache">
+<meta property="og:type" content="article">
+<meta property="og:title" content="(转载)你应该知道的缓存进化史">
+<meta property="og:url" content="http://shankcity.work/2019/01/22/cache/index.html">
+<meta property="og:site_name" content="记录">
+<meta property="og:description" content="本文是上周去技术沙龙听了一下爱奇艺的Java缓存之路有感写出来的。先简单介绍一下爱奇艺的java缓存道路的发展吧。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://media.developersha.club/http_caching_900_500.png">
+<meta property="og:updated_time" content="2019-01-22T09:07:16.187Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="(转载)你应该知道的缓存进化史">
+<meta name="twitter:description" content="本文是上周去技术沙龙听了一下爱奇艺的Java缓存之路有感写出来的。先简单介绍一下爱奇艺的java缓存道路的发展吧。">
+<meta name="twitter:image" content="http://media.developersha.club/http_caching_900_500.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '沙'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://shankcity.work/2019/01/22/cache/"/>
+
+
+
+
+
+  <title>(转载)你应该知道的缓存进化史 | 记录</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?1f1541302c879892009897555fb73c89";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">记录</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://shankcity.work/2019/01/22/cache/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="沙">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://media.developersha.club/thumb.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="记录">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">(转载)你应该知道的缓存进化史</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-22T16:30:14+08:00">
+                2019-01-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cache/" itemprop="url" rel="index">
+                    <span itemprop="name">cache</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/01/22/cache/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/01/22/cache/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+              <div class="post-description">
+                  本文是上周去技术沙龙听了一下爱奇艺的Java缓存之路有感写出来的。先简单介绍一下爱奇艺的java缓存道路的发展吧。
+              </div>
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+        <div class="post-gallery" itemscope itemtype="http://schema.org/ImageGallery">
+          
+          
+            <div class="post-gallery-row">
+              <a class="post-gallery-img fancybox"
+                 href="http://media.developersha.club/http_caching_900_500.png" rel="gallery_cjr7j8k9f0000r0f665g1963a"
+                 itemscope itemtype="http://schema.org/ImageObject" itemprop="url">
+                <img src="http://media.developersha.club/http_caching_900_500.png" itemprop="contentUrl"/>
+              </a>
+            
+          
+
+          
+          </div>
+        </div>
+      
+
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>本文是上周去技术沙龙听了一下爱奇艺的Java缓存之路有感写出来的。先简单介绍一下爱奇艺的java缓存道路的发展吧。<br><img src="http://media.developersha.club/qhdgf08idn.jpeg" alt=""><br>可以看见图中分为几个阶段:</p>
+<h3 id="第一阶段-数据同步加redis"><a href="#第一阶段-数据同步加redis" class="headerlink" title="第一阶段:数据同步加redis"></a>第一阶段:数据同步加redis</h3><p>通过消息队列进行数据同步至redis，然后Java应用直接去取缓存 这个阶段优点是:由于是使用的分布式缓存，所以数据更新快。缺点也比较明显:依赖Redis的稳定性，一旦redis挂了，整个缓存系统不可用，造成缓存雪崩，所有请求打到DB。</p>
+<h3 id="第二，三阶段-JavaMap到Guava-cache"><a href="#第二，三阶段-JavaMap到Guava-cache" class="headerlink" title="第二，三阶段:JavaMap到Guava cache"></a>第二，三阶段:JavaMap到Guava cache</h3><p>这个阶段使用进程内缓存作为一级缓存，redis作为二级。优点:不受外部系统影响，其他系统挂了，依然能使用。缺点:进程内缓存无法像分布式缓存那样做到实时更新。由于java内存有限，必定缓存得设置大小，然后有些缓存会被淘汰，就会有命中率的问题。</p>
+<h3 id="第四阶段-Guava-Cache刷新"><a href="#第四阶段-Guava-Cache刷新" class="headerlink" title="第四阶段: Guava Cache刷新"></a>第四阶段: Guava Cache刷新</h3><p>为了解决上面的问题，利用Guava Cache可以设置写后刷新时间，进行刷新。解决了一直不更新的问题，但是依然没有解决实时刷新。</p>
+<h3 id="第五阶段-外部缓存异步刷新"><a href="#第五阶段-外部缓存异步刷新" class="headerlink" title="第五阶段: 外部缓存异步刷新"></a>第五阶段: 外部缓存异步刷新</h3><p><img src="http://media.developersha.club/e45aca4f66c60b0f4b9d6e04aa0859b5.jpg" alt=""></p>
+<p>这个阶段扩展了Guava Cache,利用redis作为消息队列通知机制，通知其他java应用程序进行刷新。</p>
+<p>这里简单介绍一下爱奇艺缓存发展的五个阶段，当然还有一些其他的优化，比如GC调优，缓存穿透，缓存覆盖的一些优化等等。有兴趣的同学可以关注公众号，联系我进行交流。</p>
+<h2 id="原始社会-查库"><a href="#原始社会-查库" class="headerlink" title="原始社会 - 查库"></a>原始社会 - 查库</h2><p>上面说的是爱奇艺的一个进化线路，但是在大家的一般开发过程中，第一步一般都没有redis，而是直接查库。</p>
+<p>在流量不大的时候，查数据库或者读取文件是最为方便，也能完全满足我们的业务要求。</p>
+<h2 id="古代社会-HashMap"><a href="#古代社会-HashMap" class="headerlink" title="古代社会 - HashMap"></a>古代社会 - HashMap</h2><p>当我们应用有一定流量之后或者查询数据库特别频繁，这个时候就可以祭出我们的java中自带的HashMap或者ConcurrentHashMap。我们可以在代码中这么写:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CustomerService</span> </span>&#123; </span><br><span class="line">    <span class="keyword">private</span> HashMap&lt;String,String&gt; hashMap = <span class="keyword">new</span> HashMap&lt;&gt;(); </span><br><span class="line">    <span class="keyword">private</span> CustomerMapper customerMapper; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getCustomer</span><span class="params">(String name)</span></span>&#123; </span><br><span class="line">        String customer = hashMap.get(name); </span><br><span class="line">        <span class="keyword">if</span> ( customer == <span class="keyword">null</span>)&#123; </span><br><span class="line">            customer = customerMapper.get(name); </span><br><span class="line">            hashMap.put(name,customer); </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="keyword">return</span> customer; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是这样做就有个问题 HashMap 无法进行数据淘汰，内存会无限制的增长，所以 HashMap 很快也被淘汰了。</p>
+<p>当然并不是说它完全就没用，就像我们古代社会也不是所有的东西都是过时的，比如我们中华名族的传统美德是永不过时的，就像这个 HashMap 一样的可以在某些场景下作为缓存，当不需要淘汰机制的时候，比如我们利用反射，如果我们每次都通过反射去搜索 Method,field，性能必定低效，这时我们用 HashMap 将其缓存起来，性能能提升很多。</p>
+<h2 id="近代社会-LRUHashMap"><a href="#近代社会-LRUHashMap" class="headerlink" title="近代社会 - LRUHashMap"></a>近代社会 - LRUHashMap</h2><p>在古代社会中难住我们的问题无法进行数据淘汰，这样会导致我们内存无限膨胀,显然我们是不可以接受的。有人就说我把一些数据给淘汰掉呗，这样不就对了，但是怎么淘汰呢？随机淘汰吗？当然不行，试想一下你刚把A装载进缓存，下一次要访问的时候就被淘汰了，那又会访问我们的数据库了，那我们要缓存干嘛呢？</p>
+<p>所以聪明的人们就发明了几种淘汰算法，下面列举下常见的三种FIFO,LRU,LFU（还有一些ARC,MRU感兴趣的可以自行搜索）:</p>
+<ul>
+<li><p>FIFO:先进先出，在这种淘汰算法中，先进入缓存的会先被淘汰。这种可谓是最简单的了，但是会导致我们命中率很低。试想一下我们如果有个访问频率很高的数据是所有数据第一个访问的，而那些不是很高的是后面再访问的，那这样就会把我们的首个数据但是他的访问频率很高给挤出。</p>
+</li>
+<li><p>LRU:最近最少使用算法。在这种算法中避免了上面的问题，每次访问数据都会将其放在我们的队尾，如果需要淘汰数据，就只需要淘汰队首即可。但是这个依然有个问题，如果有个数据在1个小时的前59分钟访问了1万次(可见这是个热点数据),再后一分钟没有访问这个数据，但是有其他的数据访问，就导致了我们这个热点数据被淘汰。</p>
+</li>
+<li><p>LFU:最近最少频率使用。在这种算法中又对上面进行了优化，利用额外的空间记录每个数据的使用频率，然后选出频率最低进行淘汰。这样就避免了LRU不能处理时间段的问题。</p>
+</li>
+</ul>
+<p>上面列举了三种淘汰策略，对于这三种，实现成本是一个比一个高，同样的命中率也是一个比一个好。而我们一般来说选择的方案居中即可，即实现成本不是太高，而命中率也还行的LRU,如何实现一个LRUMap呢？我们可以通过继承LinkedHashMap，重写removeEldestEntry方法，即可完成一个简单的LRUMap。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">​<span class="class"><span class="keyword">class</span> <span class="title">LRUMap</span> <span class="keyword">extends</span> <span class="title">LinkedHashMap</span> </span>&#123; </span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> max; </span><br><span class="line">        <span class="keyword">private</span> Object lock; </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">LRUMap</span><span class="params">(<span class="keyword">int</span> max, Object lock)</span> </span>&#123; </span><br><span class="line">            <span class="comment">//无需扩容 </span></span><br><span class="line">            <span class="keyword">super</span>((<span class="keyword">int</span>) (max * <span class="number">1.4f</span>), <span class="number">0.75f</span>, <span class="keyword">true</span>); </span><br><span class="line">            <span class="keyword">this</span>.max = max; </span><br><span class="line">            <span class="keyword">this</span>.lock = lock; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="comment">/** </span></span><br><span class="line"><span class="comment">         * 重写LinkedHashMap的removeEldestEntry方法即可 </span></span><br><span class="line"><span class="comment">         * 在Put的时候判断，如果为true，就会删除最老的 </span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> eldest </span></span><br><span class="line"><span class="comment">         * <span class="doctag">@return</span> </span></span><br><span class="line"><span class="comment">         */</span> </span><br><span class="line">        <span class="meta">@Override</span> </span><br><span class="line">        <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry eldest)</span> </span>&#123; </span><br><span class="line">            <span class="keyword">return</span> size() &gt; max; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">getValue</span><span class="params">(Object key)</span> </span>&#123; </span><br><span class="line">            <span class="keyword">synchronized</span> (lock) &#123; </span><br><span class="line">                <span class="keyword">return</span> get(key); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">putValue</span><span class="params">(Object key, Object value)</span> </span>&#123; </span><br><span class="line">            <span class="keyword">synchronized</span> (lock) &#123; </span><br><span class="line">                put(key, value); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">removeValue</span><span class="params">(Object key)</span> </span>&#123; </span><br><span class="line">            <span class="keyword">synchronized</span> (lock) &#123; </span><br><span class="line">                <span class="keyword">return</span> remove(key) != <span class="keyword">null</span>; </span><br><span class="line">            &#125; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">removeAll</span><span class="params">()</span></span>&#123; </span><br><span class="line">            clear(); </span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>; </span><br><span class="line">        &#125; </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>在 LinkedHashMap 中维护了一个 entry(用来放 key 和 value 的对象)链表。在每一次 get 或者 put 的时候都会把插入的新 entry，或查询到的老 entry 放在我们链表末尾。</p>
+<p>可以注意到我们在构造方法中，设置的大小特意设置到 max*1.4，在下面的 removeEldestEntry 方法中只需要 size&gt;max 就淘汰，这样我们这个 map 永远也走不到扩容的逻辑了，通过重写 LinkedHashMap，几个简单的方法我们实现了我们的 LruMap。</p>
+<h2 id="现代社会-Guava-Cache"><a href="#现代社会-Guava-Cache" class="headerlink" title="现代社会 - Guava Cache"></a>现代社会 - Guava Cache</h2><p>在近代社会中已经发明出来了 LRUMap，用来进行缓存数据的淘汰，但是有几个问题：</p>
+<ul>
+<li>锁竞争严重，可以看见我的代码中，Lock 是全局锁，在方法级别上面的，当调用量较大时，性能必然会比较低。</li>
+<li>不支持过期时间</li>
+<li>不支持自动刷新<br>所以谷歌的大佬们对于这些问题，按捺不住了，发明了 Guava Cache，在 Guava Cache 中你可以如下面的代码一样，轻松使用：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> ExecutionException </span>&#123; </span><br><span class="line">        LoadingCache&lt;String, String&gt; cache = CacheBuilder.newBuilder() </span><br><span class="line">                .maximumSize(<span class="number">100</span>) </span><br><span class="line">                <span class="comment">//写之后30ms过期 </span></span><br><span class="line">                .expireAfterWrite(<span class="number">30L</span>, TimeUnit.MILLISECONDS) </span><br><span class="line">                <span class="comment">//访问之后30ms过期 </span></span><br><span class="line">                .expireAfterAccess(<span class="number">30L</span>, TimeUnit.MILLISECONDS) </span><br><span class="line">                <span class="comment">//20ms之后刷新 </span></span><br><span class="line">                .refreshAfterWrite(<span class="number">20L</span>, TimeUnit.MILLISECONDS) </span><br><span class="line">                <span class="comment">//开启weakKey key 当启动垃圾回收时，该缓存也被回收 </span></span><br><span class="line">                .weakKeys() </span><br><span class="line">                .build(createCacheLoader()); </span><br><span class="line">        System.out.println(cache.get(<span class="string">"hello"</span>)); </span><br><span class="line">        cache.put(<span class="string">"hello1"</span>, <span class="string">"我是hello1"</span>); </span><br><span class="line">        System.out.println(cache.get(<span class="string">"hello1"</span>)); </span><br><span class="line">        cache.put(<span class="string">"hello1"</span>, <span class="string">"我是hello2"</span>); </span><br><span class="line">        System.out.println(cache.get(<span class="string">"hello1"</span>)); </span><br><span class="line">    &#125; </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> com.google.common.cache.<span class="function">CacheLoader&lt;String, String&gt; <span class="title">createCacheLoader</span><span class="params">()</span> </span>&#123; </span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> com.google.common.cache.CacheLoader&lt;String, String&gt;() &#123; </span><br><span class="line">            <span class="meta">@Override</span> </span><br><span class="line">            <span class="function"><span class="keyword">public</span> String <span class="title">load</span><span class="params">(String key)</span> <span class="keyword">throws</span> Exception </span>&#123; </span><br><span class="line">                <span class="keyword">return</span> key; </span><br><span class="line">            &#125; </span><br><span class="line">        &#125;; </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>我将会从 Guava Cache 原理中，解释 Guava Cache 是如何解决 LRUMap 的几个问题的。</p>
+<h3 id="Guava-Cache-的总结"><a href="#Guava-Cache-的总结" class="headerlink" title="Guava Cache 的总结"></a>Guava Cache 的总结</h3><p>细细品读 Guava Cache 的源码总结下来，其实就是一个性能不错的，api 丰富的 LRU Map。爱奇艺的缓存的发展也是基于此之上，通过对 Guava Cache 的二次开发，让其可以进行 Java 应用服务之间的缓存更新。</p>
+<h2 id="走向未来-caffeine"><a href="#走向未来-caffeine" class="headerlink" title="走向未来-caffeine"></a>走向未来-caffeine</h2><p>Guava Cache 的功能的确是很强大，满足了绝大多数人的需求，但是其本质上还是 LRU 的一层封装，所以在众多其他较为优良的淘汰算法中就相形见绌了。而 Caffeine Cache 实现了 W-TinyLFU(LFU+LRU 算法的变种)。下面是不同算法的命中率的比较：<br><img src="http://media.developersha.club/a94b126600535d486db9ea3eec7ba977.jpg" alt=""><br>其中 Optimal 是最理想的命中率，LRU 和其他算法相比的确是个弟弟。而我们的 W-TinyLFU 是最接近理想命中率的。当然不仅仅是命中率 Caffeine 优于了 Guava Cache，在读写吞吐量上面也是完爆 Guava Cache。<br><img src="http://media.developersha.club/101557f9ac8efee36940382ed803a6bc.jpg" alt=""></p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>本文主要讲述爱奇艺的缓存之路和本地缓存的一个发展历史(从古至今到未来），以及每一种缓存的实现基本原理。</p>
+<p>当然要使用好缓存光是这些远远不够，比如本地缓存如何在其他地方更改了之后同步更新，分布式缓存，多级缓存等等。后面也会专门写一节介绍这个如何用好缓存。</p>
+<p>对于 Guava Cache 和 Caffeine 的原理后面也会专门抽出时间写这两个的源码分析，如果感兴趣的朋友可以关注公众号第一时间查阅更新文章。</p>
+
+      <script>
+        window.disqusProxy={
+          shortname: 'sha0830',
+          username: 'sha0830',
+          server: '172.96.222.240',
+          port: 5509,
+          adminAvatar: '/avatars/admin-avatar.jpg',
+          identifier: '2019/01/22/cache/',
+        };
+        window.disqus_config = function () {
+          this.page.url = window.location.href;
+          this.page.identifier = window.disqusProxy.identifier;
+        };
+      </script>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="http://media.developersha.club/wechat-reward.jpg" alt="沙 微信支付"/>
+        <p>微信支付</p>
+      </div>
+    
+
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/cache/" rel="tag"># cache</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/16/Leancloud-Valine/" rel="next" title="Leancloud+Valine打造Hexo个人博客极简评论系统">
+                <i class="fa fa-chevron-left"></i> Leancloud+Valine打造Hexo个人博客极简评论系统
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="http://media.developersha.club/thumb.jpeg"
+                alt="沙" />
+            
+              <p class="site-author-name" itemprop="name">沙</p>
+              <p class="site-description motion-element" itemprop="description">记录点滴！</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/sha0830" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="mailto:shaat1990@163.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.baidu.com/" title="百度" target="_blank">百度</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://www.google.com/" title="google" target="_blank">google</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一阶段-数据同步加redis"><span class="nav-number">1.1.</span> <span class="nav-text">第一阶段:数据同步加redis</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二，三阶段-JavaMap到Guava-cache"><span class="nav-number">1.2.</span> <span class="nav-text">第二，三阶段:JavaMap到Guava cache</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第四阶段-Guava-Cache刷新"><span class="nav-number">1.3.</span> <span class="nav-text">第四阶段: Guava Cache刷新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第五阶段-外部缓存异步刷新"><span class="nav-number">1.4.</span> <span class="nav-text">第五阶段: 外部缓存异步刷新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#原始社会-查库"><span class="nav-number">2.</span> <span class="nav-text">原始社会 - 查库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#古代社会-HashMap"><span class="nav-number">3.</span> <span class="nav-text">古代社会 - HashMap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#近代社会-LRUHashMap"><span class="nav-number">4.</span> <span class="nav-text">近代社会 - LRUHashMap</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#现代社会-Guava-Cache"><span class="nav-number">5.</span> <span class="nav-text">现代社会 - Guava Cache</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Guava-Cache-的总结"><span class="nav-number">5.1.</span> <span class="nav-text">Guava Cache 的总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#走向未来-caffeine"><span class="nav-number">6.</span> <span class="nav-text">走向未来-caffeine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后"><span class="nav-number">7.</span> <span class="nav-text">最后</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2018 &mdash; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">沙</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="/js/src/Valine.min.js"></script>
+
+  
+    
+    <script src="/js/src/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: '2K4TSkrQ99YX4j1kR4YnT6Td-gzGzoHsz',
+        appKey: '1ylJqwpqHxlFu4GTki3q8GRt',
+        placeholder: '说点什么吧！',
+        avatar:'retro',
+        guest_info:['nick'] ,
+        pageSize:'10' || 10,
+    });
+    var infoEle = document.querySelector('#comments .info');
+        if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0){
+          infoEle.childNodes.forEach(function(item) {
+            item.parentNode.removeChild(item);
+          });
+        }
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
